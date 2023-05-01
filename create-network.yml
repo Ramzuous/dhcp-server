@@ -1,0 +1,66 @@
+- hosts: dhcp-server
+  gather_facts: false
+  vars_files:
+    - vars_files/var_file_strings.yml
+  tasks:
+    - include_role:
+        name: file
+      vars:
+        path: "{{ default_path }}"
+        state: "{{ item }}"
+      with_items:
+        - absent
+        - touch
+    - include_role:
+        name: lineinfile
+      vars:
+        path: "{{ default_path }}"
+        line: 'INTERFACESv4=""'
+    - include_role:
+        name: replace
+      vars:
+        path: "{{ default_path }}"
+        regexp: '="'
+        replace: '="{{ item.interface }} '
+      with_items:
+        - "{{ networks_to_set_vars }}"
+    - include_role:
+        name: replace
+      vars:
+        path: "{{ default_path }}"
+        regexp: '{{ item.regexp }}'
+        replace: '{{ item.replace }}'
+      with_items:
+        - regexp: ' "'
+          replace: '"'
+        - regexp: allow-hotplug
+          replace: auto
+    - include_role:
+        name: blockinfile
+      vars:
+        path: "{{ network_path }}"
+        marker: "# {mark} interface {{ item.interface }}"
+        state: present
+        block: |
+          auto {{ item.interface }}
+          iface {{ item.interface }} inet static
+               address {{ item.subnet }}.1
+               netmask {{ item.netmask }}
+      with_items:      
+        - "{{ networks_to_set_vars }}"
+    - include_role:
+        name: lineinfile
+      vars:
+        path: "{{ dhcpd_path }}"
+        line: "subnet {{ item.subnet }}.0 netmask {{ item.netmask }} { range {{ item.ip_range }};option routers {{ item.subnet }}.1; }"
+      with_items:
+        - "{{ networks_to_set_vars }}"
+    - include_role:
+        name: systemd
+      vars:
+        name: "{{ item }}"
+        state: restarted
+        enabled: yes
+      with_items:
+        - networking
+        - isc-dhcp-server

@@ -1,0 +1,6 @@
+---
+- name: Replace {{ regexp }} by {{ replace }} in file {{ path }}
+  replace:
+    path: "{{ path }}"
+    regexp: '{{ regexp }}'
+    replace: '{{ replace }}'

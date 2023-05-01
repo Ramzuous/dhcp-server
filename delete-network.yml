@@ -1,0 +1,49 @@
+- hosts: dhcp-server
+  gather_facts: false
+  vars_files:
+    - vars_files/var_file_strings.yml
+  tasks:
+    - shell: cat "{{ network_path }}" | grep -B 2 {{ item }} | grep auto | sed 's/auto //g'
+      with_items: "{{ networks_to_delete_vars }}"
+      register: res
+    - include_role:
+        name: replace
+      vars:
+        path: "{{ default_path }}"
+        regexp: '{{ item.stdout }}'
+        replace: ''
+      with_items: "{{ res.results }}"
+    - include_role:
+        name: replace
+      vars:
+        path: "{{ default_path }}"
+        regexp: ' '
+        replace: ''
+    - include_role:
+        name: replace
+      vars:
+        path: "{{ network_path }}"
+        regexp: '\n[^\n]+\n[^\n]+\n[^\n]+\n[^\n]+address {{ item }}.*\n[^\n]+\n[^\n]+'
+        replace: ''
+      with_items: "{{ networks_to_delete_vars }}"
+    - include_role:
+        name: lineinfile
+        tasks_from: lineinfile_with_regexp
+      vars:
+        path: "{{ dhcpd_path }}"
+        regexp: '.{{ item }}.'
+        state: absent
+      with_items: "{{ networks_to_delete_vars }}"  
+    - include_role:
+        name: shell
+      vars:
+        shell: sed -i '/lease {{ item }}/,/}/{//!d}' "{{ lease_path }}"
+      with_items: "{{ networks_to_delete_vars }}"
+    - include_role:
+        name: replace
+      vars:
+        path: "{{ lease_path }}"
+        regexp: 'lease {{ item }}.*\n[^\n]+'
+        replace: ''
+      with_items: "{{ networks_to_delete_vars }}"
+    - reboot:

@@ -1,0 +1,4 @@
+- name: pip {{ name }} state {{ state }}
+  pip:
+    name: "{{ name }}"
+    state: "{{ state }}"

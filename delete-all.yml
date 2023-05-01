@@ -1,0 +1,58 @@
+- hosts: dhcp-server
+  gather_facts: false
+  vars_files:
+    - vars_files/var_file_strings.yml
+  tasks:
+    - include_role:
+        name: systemd
+      vars:
+        name: isc-dhcp-server
+        state: stopped
+        enabled: no
+    - include_role:
+        name: iptables
+      vars:
+        table: nat
+        chain: POSTROUTING
+        out_interface : "{{ dhcp_server_dev_out }}"
+        jump: MASQUERADE
+        state: absent 
+    - include_role:
+        name: blockinfile
+      vars:
+        path: "{{ network_path }}"
+        marker: "# {mark} interface {{ item.interface }}"
+        state: absent
+        block: |
+          auto {{ item.interface }}
+          iface {{ item.interface }} inet static
+               address {{ item.subnet }}.1
+               netmask {{ item.netmask }}
+      with_items:      
+        - "{{ networks_to_set_vars }}"   
+    - include_role:
+        name: file   
+      vars:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "{{ lease_path }}"
+        - "{{ default_path }}"
+        - "{{ dhcpd_path }}"
+        - "{{ iptables_path }}"
+        - "{{ default_path }}"
+    - include_role:
+        name: pip      
+      vars:
+        name: pexpect
+        state: absent
+    - include_role:
+        name: apt
+      vars:
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - isc-dhcp-server
+        - python3-pip
+        - iptables-persistent
+    - reboot:

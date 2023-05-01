@@ -1,0 +1,3 @@
+---
+- name: Run command {{ item }}
+  command: {{ item }}

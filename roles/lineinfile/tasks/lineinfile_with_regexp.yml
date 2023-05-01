@@ -1,0 +1,6 @@
+---
+- name: regexp {{ regexp }} in {{ path }} state {{ state }}
+  lineinfile:
+    path: "{{ path }}"
+    regexp: "{{ regexp }}"
+    state: "{{ state }}"

@@ -1,0 +1,5 @@
+---
+- name: Iptables {{ state }} to {{ path }}
+  community.general.iptables_state:
+    state: "{{ state }}"
+    path: "{{ path }}"

@@ -1,0 +1,5 @@
+---
+- name: Add {{ line }} to {{ path }}
+  lineinfile:
+    path: "{{ path }}"
+    line: "{{ line }}"

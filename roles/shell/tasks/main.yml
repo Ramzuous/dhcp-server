@@ -1,0 +1,3 @@
+---
+- name: Run command {{ shell }}
+  shell: "{{ shell }}"

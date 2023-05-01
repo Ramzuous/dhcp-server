@@ -1,0 +1,5 @@
+---
+- name: apt {{ name }} state {{ state }}
+  apt:
+    name: "{{ name }}"
+    state: "{{ state }}"

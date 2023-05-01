@@ -1,0 +1,8 @@
+---
+- name: Set {{ name }} state {{ state }}
+  sysctl:
+    name: "{{ name }}"
+    value: '{{ value }}'
+    sysctl_set: "{{ sysctl_set }}"
+    state: "{{ state }}"
+    reload: "{{ reload }}"

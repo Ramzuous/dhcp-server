@@ -1,0 +1,8 @@
+# Static
+#ansible_python_interpreter: "/usr/bin/python3"
+dhcpd_path: /etc/dhcp/dhcpd.conf
+default_path: /etc/default/isc-dhcp-server
+network_path: /etc/network/interfaces
+lease_path: /var/lib/dhcp/dhcpd.leases
+iptables_path: /etc/iptables/rules.v4
+# Edit

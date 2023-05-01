@@ -1,0 +1,63 @@
+- hosts: dhcp-server
+  gather_facts: false
+  vars_files:
+    - vars_files/var_file_strings.yml
+  tasks:
+    - include_role:
+        name: apt
+        tasks_from: upgrade
+    - include_role:
+        name: apt
+      vars:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - isc-dhcp-server
+        - python3-pip
+        - iptables-persistent
+    - include_role:
+        name: pip      
+      vars:
+        name: pexpect
+        state: present
+    - include_role:
+        name: sysctl
+      vars:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+        state: present
+        reload: yes
+    - include_role:
+        name: file
+      vars:
+        path: "{{ dhcpd_path }}"
+        state: "{{ item }}"
+      with_items:
+        - absent
+        - touch
+    - include_role:
+        name: lineinfile
+      vars:
+        line: "{{ item }}"
+        path: "{{ dhcpd_path }}"
+      with_items:        
+        - option domain-name "{{ option_domain_name }}";
+        - option domain-name-servers {{ option_domain_name_servers }};
+        - default-lease-time {{ default_lease_time }};
+        - max-lease-time {{ max_lease_time }};
+        - authoritative;
+    - include_role:
+        name: iptables
+      vars:
+        table: nat
+        chain: POSTROUTING
+        out_interface : "{{ dhcp_server_dev_out }}"
+        jump: MASQUERADE
+        state: present
+    - include_role:
+        name: iptables
+        tasks_from: state
+      vars:
+        state: saved
+        path: "{{ iptables_path }}"
